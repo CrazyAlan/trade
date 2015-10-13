@@ -271,6 +271,11 @@ int _tmain(int argc, _TCHAR* argv[])
 				while ((iBytesReceived = recv(sockLevel1, pCurrentMsg, sizeof(sckBuffer) - iBytesLeftover - 1, 0)) != SOCKET_ERROR)
 				{
 					//System Time
+					GetLocalTime( &sys_time );
+					int hour = sys_time.wHour;
+					int minute = sys_time.wMinute;
+					int second = sys_time.wSecond;
+					int milisecond = sys_time.wMilliseconds;
 				//	GetLocalTime( &sys_time );
 					// unlike with the admin port connection and with the other example apps,
 					// with this connection, we ARE worried about efficiency of data processing.
@@ -289,17 +294,19 @@ int _tmain(int argc, _TCHAR* argv[])
 					pCurrentMsg = sckBuffer;
 					//char newmsg[60] = "";
 
-					while ((pNextMsg = strchr(pCurrentMsg, ucNewLine)) != NULL)
+				//	while ((pNextMsg = strchr(pCurrentMsg, ucNewLine)) != NULL)
+					while ((pNextMsg = strrchr(pCurrentMsg,'Q')) != NULL)
 					{
+						lastRowMsg = strchr(pNextMsg, ucNewLine);
 						// we only get in here if we have another complete message to process
 						i64TotalMsgs++;
 						iMsgsLastSecond++;
 
 						char *newmsg;
-						newmsg = new char[pNextMsg -pCurrentMsg+1]();
+						newmsg = new char[lastRowMsg -pNextMsg+1]();
 						
 
-						switch (pCurrentMsg[0])
+						switch (pNextMsg[0])
 						{
 							case 81: // Q
 								// Update Message
@@ -309,14 +316,15 @@ int _tmain(int argc, _TCHAR* argv[])
 								
 								
 								
-								memcpy(newmsg,pCurrentMsg,pNextMsg -pCurrentMsg);
-								printf("%s\n", newmsg);
-
+								memcpy(newmsg,pNextMsg,lastRowMsg -pNextMsg);
+							//	printf("%s\n Local Time, %d:%d:%d.%d \n", newmsg,hour, minute,second,milisecond);
+								printf("%s local,%d:%d:%d.%d\n", newmsg, hour, minute,second,milisecond);
 								//std::cout<<newmsg<<std::endl;
 							
 								
 								//printf("%s", pCurrentMsg);
-								fprintf (pFile, "%s\n", newmsg);
+							//	fprintf (pFile, "%s\n Local Time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
+								fprintf (pFile, "%s local time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
 							//	std::cout << sys_time.wHour << ":"<< sys_time.wMinute << ":"<<sys_time.wSecond << "."<< sys_time.wMilliseconds <<"," << pCurrentMsg;
 							//	printf("Next Message %s", pNextMsg);
 								break;
@@ -326,10 +334,10 @@ int _tmain(int argc, _TCHAR* argv[])
 								// we trigger our output to the screen when we receive a timestamp message.
 
 								// update our timing variables
-								time(&tNow);
+								//time(&tNow);
 
 								//System Time
-								GetLocalTime( &sys_time );
+								//GetLocalTime( &sys_time );
 
 							//	struct tm *timeinfo;
 							//	struct tm ts;
@@ -338,38 +346,20 @@ int _tmain(int argc, _TCHAR* argv[])
 								// skip the first writeout if a complete second hasn't elapsed to prevent division by zero
 								i64Seconds = tNow;
 								i64Seconds -= tStart;
-								if (i64Seconds > 0)
+								//if (i64Seconds > 0)
 								{
 									i64TotalMsgsPerSecond = i64TotalMsgs;
 									i64TotalMsgsPerSecond /= i64Seconds;
 									//printf("F:%d\tP:%d\tQ:%d\tT:%d\tS:%d\tN:%d\tR:%d\tLM:%d\tTMS:%I64d\tTIME:%d\n", iFMessages, iPMessages, iQMessages, iTMessages, iSMessages, iNMessages, iRMessages, iMsgsLastSecond, i64TotalMsgsPerSecond, tNow);
-								/*	
-									struct tm  ts;
-									char       buf[80];
-									// Get current time
-									//time(&now);
-									// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
-									ts = *localtime(&tNow);
-									strftime(buf, sizeof(buf), "%H:%M:%S", &ts);
-									printf("%s\n", buf);
-								*/
+								
 
-									//time (&rawtime);
-								//	timeinfo = localtime (&tNow);
-								//	ts = *localtime (&tNow);
-									//printf ("Current local time and date: %s", asctime(timeinfo));
-									memcpy(newmsg,pCurrentMsg,pNextMsg - pCurrentMsg);
-									printf("%s Local Time %d:%d.%d\n", newmsg,sys_time.wMinute,sys_time.wSecond,sys_time.wMilliseconds);
-
-									fprintf(pFile, "%s Local Time %d:%d.%d\n", newmsg,sys_time.wMinute,sys_time.wSecond,sys_time.wMilliseconds);
 			
-									//std::cout<<newmsg<<std::endl;
+									//memcpy(newmsg,pCurrentMsg,pNextMsg - pCurrentMsg);
+									//printf("%s\n Local Time, %d:%d:%d.%d \n", newmsg,hour, minute,second,milisecond);
 
-								//	 strftime(buf, sizeof(buf), "%M:%S.%Z", &ts);
-								//	 printf("%s Local Time %s\n", newmsg,buf);
-									//printf("%s", pCurrentMsg);
-							//		fprintf (pFile, "%s Local Time %s \n", newmsg,asctime(timeinfo));
-									// reset our "Messages in the last second" counter
+								//	fprintf (pFile, "%s\n Local Time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
+			
+									
 									iMsgsLastSecond = 0;
 								}
 								break;
