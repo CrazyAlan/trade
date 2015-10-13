@@ -1,0 +1,3 @@
+S,SET PROTOCOL,5.0
+w@ESZ15
+S,SELECT UPDATE FIELDS,Bid TimeMS, Ask TimeMS,  Bid,  Ask, Bid Size, Ask Size
