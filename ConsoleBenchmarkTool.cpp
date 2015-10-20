@@ -64,6 +64,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	//using time
 	SYSTEMTIME sys_time;
 	FILE * pFile;
+
+	pFile = fopen ("myfile.csv","w");
+	GetLocalTime( &sys_time );
+	fprintf (pFile, "%d%d%d %d:%d \n\n", sys_time.wYear,sys_time.wMonth,sys_time.wDay,sys_time.wHour,sys_time.wMinute);
+	fclose (pFile);
+
 	pFile = fopen ("myfile.csv","a");
 
 // Initialize Winsock
@@ -293,107 +299,36 @@ int _tmain(int argc, _TCHAR* argv[])
 					// move our pointer back to the beginning of the buffer
 					pCurrentMsg = sckBuffer;
 					//char newmsg[60] = "";
+					
 
-				//	while ((pNextMsg = strchr(pCurrentMsg, ucNewLine)) != NULL)
-					while ((pNextMsg = strrchr(pCurrentMsg,'Q')) != NULL)
+
+					/* parse T message and Q message */
+					char *newmsg;
+					if((pNextMsg = strrchr(pCurrentMsg,'Q'))!= NULL)
 					{
 						lastRowMsg = strchr(pNextMsg, ucNewLine);
-						// we only get in here if we have another complete message to process
-						i64TotalMsgs++;
-						iMsgsLastSecond++;
-
-						char *newmsg;
 						newmsg = new char[lastRowMsg -pNextMsg+1]();
-						
-
-						switch (pNextMsg[0])
-						{
-							case 81: // Q
-								// Update Message
-								iQMessages++;
-							//	lastRowMsg = strrchr(pCurrentMsg,'Q');
-							//	pNextMsg = strchr(lastRowMsg, ucNewLine); //end char
-								
-								
-								
-								memcpy(newmsg,pNextMsg,lastRowMsg -pNextMsg);
-							//	printf("%s\n Local Time, %d:%d:%d.%d \n", newmsg,hour, minute,second,milisecond);
-								printf("%s local,%d:%d:%d.%d\n", newmsg, hour, minute,second,milisecond);
-								//std::cout<<newmsg<<std::endl;
-							
-								
-								//printf("%s", pCurrentMsg);
-							//	fprintf (pFile, "%s\n Local Time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
-								fprintf (pFile, "%s local time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
-							//	std::cout << sys_time.wHour << ":"<< sys_time.wMinute << ":"<<sys_time.wSecond << "."<< sys_time.wMilliseconds <<"," << pCurrentMsg;
-							//	printf("Next Message %s", pNextMsg);
-								break;
-							case 84: // T
-								// Timestamp Message
-								iTMessages++;
-								// we trigger our output to the screen when we receive a timestamp message.
-
-								// update our timing variables
-								//time(&tNow);
-
-								//System Time
-								//GetLocalTime( &sys_time );
-
-							//	struct tm *timeinfo;
-							//	struct tm ts;
-							//	char       buf[80];
-
-								// skip the first writeout if a complete second hasn't elapsed to prevent division by zero
-								i64Seconds = tNow;
-								i64Seconds -= tStart;
-								//if (i64Seconds > 0)
-								{
-									i64TotalMsgsPerSecond = i64TotalMsgs;
-									i64TotalMsgsPerSecond /= i64Seconds;
-									//printf("F:%d\tP:%d\tQ:%d\tT:%d\tS:%d\tN:%d\tR:%d\tLM:%d\tTMS:%I64d\tTIME:%d\n", iFMessages, iPMessages, iQMessages, iTMessages, iSMessages, iNMessages, iRMessages, iMsgsLastSecond, i64TotalMsgsPerSecond, tNow);
-								
-
-			
-									//memcpy(newmsg,pCurrentMsg,pNextMsg - pCurrentMsg);
-									//printf("%s\n Local Time, %d:%d:%d.%d \n", newmsg,hour, minute,second,milisecond);
-
-								//	fprintf (pFile, "%s\n Local Time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
-			
-									
-									iMsgsLastSecond = 0;
-								}
-								break;
-							case 70: // F
-								// Fundamental Message
-								iFMessages++;
-								break;
-							case 80: // P
-								// Summary Message
-								iPMessages++;
-								break;
-							case 82: // R
-								// Regional Message
-								iRMessages++;
-								break;
-							case 78: // N
-								// News Message
-								iNMessages++;
-								break;
-							case 83: // S
-								// System Message
-								iSMessages++;
-								break;
-						}
-						// update our pointer to the next msg
-						pCurrentMsg = pNextMsg;
-						pCurrentMsg++;
-
+						memcpy(newmsg,pNextMsg,lastRowMsg -pNextMsg);
+						printf("%s local,%d:%d:%d.%d\n", newmsg, hour, minute,second,milisecond);
+						fprintf (pFile, "%s, local time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
 						delete newmsg;
-						newmsg = NULL;
-
 					}
+					
+					if((pNextMsg = strrchr(pCurrentMsg,'T'))!= NULL)
+					{
+						lastRowMsg = strchr(pNextMsg, ucNewLine);
+						newmsg = new char[lastRowMsg -pNextMsg+1]();
+						memcpy(newmsg,pNextMsg,lastRowMsg -pNextMsg);
+						printf("%s, local,%d:%d:%d.%d\n", newmsg, hour, minute,second,milisecond);
+						fprintf (pFile, "%s, local time, %d:%d:%d.%d \n", newmsg, hour, minute,second,milisecond);
+						delete newmsg;
+					}
+
+					newmsg = NULL;
+					
+				
 					// now we need to check for an incomplete message and copy it to the beginning of the buffer for the next read from the socket
-					if (iTotalBytesParsed < iBytesToParse)
+					/*if (iTotalBytesParsed < iBytesToParse)
 					{
 						// we have an incomplete message
 						iBytesLeftover = iBytesToParse;
@@ -408,6 +343,8 @@ int _tmain(int argc, _TCHAR* argv[])
 					{
 						pCurrentMsg = sckBuffer;
 					}
+					*/
+					pCurrentMsg = sckBuffer;
 					// zero out any of the buffer that was used in the read starting at the end of what we copied to the front
 					memset(pCurrentMsg, 0, iSckBufferSize - iBytesLeftover);
 				}
